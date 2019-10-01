@@ -1,0 +1,17 @@
+{#
+/**
+* @file
+* Template for the views complex grouping style.
+*/
+#}
+
+<div class="views-complex-grouping-leave level_<?php print $grouping_level; ?> branch_<?php print $branch_level; ?>">
+    <?php if (!empty($title)): ?>
+    <h3><?php print $title; ?></h3>
+    <?php endif; ?>
+    <?php foreach ($rows as $id => $row): ?>
+    <div class="views-row views-row-<?php print $zebra; ?> <?php print $classes; ?>">
+        <?php print $row; ?>
+    </div>
+    <?php endforeach; ?>
+</div>

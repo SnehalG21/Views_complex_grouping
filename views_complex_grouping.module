@@ -1,0 +1,38 @@
+<?php
+
+
+/**
+ * Implements hook_theme().
+ */
+function views_complex_grouping_theme($existing, $type, $theme, $path) {
+  return [
+      'views_complex_grouping_level' => [
+          'variables' => [
+              'view' => NULL,
+              'grouping' => NULL,
+              'grouping_level' => NULL,
+              'rows' => [],
+              'content' => NULL,
+              'title' => '',
+              'fields' => []
+          ],
+          'template' => 'views_complex_grouping_level',
+      ],
+  ];
+}
+//
+///**
+// * Implementation of template_process for views_complex_grouping_level.tpl.php.
+// */
+//function template_preprocess_views_complex_grouping_level(&$vars) {
+////  $vars['content'] = $vars['view']->style_plugin->render_grouping_sets($vars['rows'], $vars['grouping_level']);
+//}
+
+
+/**
+ * @file
+ * Views Complex Grouping Views module help and theme functions.
+ */
+
+// Store TARDIS preprocess theme functions in a separate .inc file.
+\Drupal::moduleHandler()->loadInclude('views_complex_grouping', 'inc', 'views_complex_grouping.theme');
