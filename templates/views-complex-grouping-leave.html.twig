@@ -5,13 +5,14 @@
 */
 #}
 
-<div class="views-complex-grouping-leave level_<?php print $grouping_level; ?> branch_<?php print $branch_level; ?>">
-    <?php if (!empty($title)): ?>
-    <h3><?php print $title; ?></h3>
-    <?php endif; ?>
-    <?php foreach ($rows as $row): ?>
-    <div class="views-row views-row-<?php print $zebra; ?> <?php print $classes; ?>">
-        <?php print $row; ?>
+
+<div class="views-complex-grouping-leave level_{{ grouping_level }} branch_{{ grouping_branch }}">
+    {% if title %}
+    <h3>{{ title }}</h3>
+    {%  endif %}
+    {% for row in rows %}
+    <div class="views-row views-row-{{ zebra }} {{ sclasses }}">
+        {{ row }}
     </div>
-    <?php endforeach; ?>
+    {% endfor %}
 </div>

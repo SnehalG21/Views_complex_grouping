@@ -1,38 +1,28 @@
 <?php
-
-
-/**
- * Implements hook_theme().
- */
+//
+//
+//// Store Complex Grouping preprocess theme functions in a separate .inc file.
+//\Drupal::moduleHandler()->loadInclude('views_complex_grouping', 'inc', 'views_complex_grouping.theme');
+//
+//
+///**
+// * Implements hook_theme().
+// */
 function views_complex_grouping_theme($existing, $type, $theme, $path) {
   return [
-      'views_complex_grouping_level' => [
+      'views_complex_grouping_leave' => [
           'variables' => [
+              'test_var' => NULL,
               'view' => NULL,
               'grouping' => NULL,
               'grouping_level' => NULL,
-              'rows' => NULL,
+              'grouping_branch' => NULL,
+              'rows' => [],
               'content' => NULL,
               'title' => '',
               'fields' => []
+
           ],
-          'template' => 'views_complex_grouping_level',
       ],
   ];
 }
-
-/**
- * Implementation of template_process for views-complex-grouping-leave.html.twig.
- */
-function template_preprocess_views_complex_grouping_level(&$vars) {
-  $vars['content'] = $vars['view']->style_plugin->renderGroupingSets($vars['rows'], $vars['grouping_level']);
-}
-
-
-/**
- * @file
- * Views Complex Grouping Views module help and theme functions.
- */
-
-// Store TARDIS preprocess theme functions in a separate .inc file.
-//\Drupal::moduleHandler()->loadInclude('views_complex_grouping', 'inc', 'views_complex_grouping.theme');

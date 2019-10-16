@@ -11,11 +11,11 @@ use Drupal\views\Plugin\views\style\StylePluginBase;
  *   id = "complex_grouping",
  *   title = @Translation("Complex Grouping"),
  *   help = @Translation("Limit the number of rows under each grouping field"),
- *   theme = "views_complex_grouping_level",
+ *   theme = "views_complex_grouping_leave",
  *   display_types = {"normal"}
  * )
  */
-class ViewsComplexGrouping extends StylePluginBase
+class ComplexGrouping extends StylePluginBase
 {
   /**
    * {@inheritdoc}
@@ -89,30 +89,24 @@ class ViewsComplexGrouping extends StylePluginBase
     }
   }
 
-  function renderGrouping($records, $groupings = array(), $group_rendered = NULL) {
-
-    // This is for backward compability, when $groupings was a string containing
-    // the ID of a single field.
+  public function renderGrouping($records, $groupings = [], $group_rendered = NULL) {
+    // This is for backward compatibility, when $groupings was a string
+    // containing the ID of a single field.
     if (is_string($groupings)) {
       $rendered = $group_rendered === NULL ? TRUE : $group_rendered;
-      $groupings = array(array('field' => $groupings, 'rendered' => $rendered));
+      $groupings = [['field' => $groupings, 'rendered' => $rendered]];
     }
 
     // Make sure fields are rendered
     $this->renderFields($this->view->result);
-
-    $sets = array();
+    $sets = [];
     if ($groupings) {
-
       foreach ($records as $index => $row) {
         // Iterate through configured grouping fields to determine the
         // hierarchically positioned set where the current row belongs to.
         // While iterating, parent groups, that do not exist yet, are added.
-
         $set = &$sets;
-
         foreach ($groupings as $level => $info) {
-
           $field = $info['field'];
           $rendered = isset($info['rendered']) ? $info['rendered'] : $group_rendered;
           $rendered_strip = isset($info['rendered_strip']) ? $info['rendered_strip'] : FALSE;
@@ -123,7 +117,6 @@ class ViewsComplexGrouping extends StylePluginBase
           // the admin or theme layer or anywhere else we'd like.
           if (isset($this->view->field[$field])) {
             $group_content = $this->getField($index, $field);
-            //dpm($group_content);
             if ($this->view->field[$field]->options['label']) {
               $group_content = $this->view->field[$field]->options['label'] . ': ' . $group_content;
             }
@@ -145,74 +138,66 @@ class ViewsComplexGrouping extends StylePluginBase
 
           // Create the group if it does not exist yet.
           if (empty($set[$grouping])) {
-
             $set[$grouping]['group'] = $group_content;
-            $set[$grouping]['rows'] =[];
             $set[$grouping]['level'] = $level;
+            $set[$grouping]['rows'] = [];
             $set[$grouping]['fields'] = [];
-
             // Add selected fields for this level.
             foreach ($this->options['grouping'][$level]['complex_grouping']['grouping-fields'] as $field) {
               $set[$grouping]['fields'][$field] = $this->rendered_fields[$index][$field];
             }
-
           }
 
           // Move the set reference into the row set of the group we just determined.
           $set = &$set[$grouping]['rows'];
-
         }
         // Add the row to the hierarchically positioned row set we just determined.
         $set[$index] = $row;
-
       }
     }
     else {
       // Create a single group with an empty grouping field.
-      $sets[''] = array(
+      $sets[''] = [
           'group' => '',
           'rows' => $records,
-      );
+      ];
     }
 
-    // If this parameter isn't explicitely set modify the output to be fully
+    // If this parameter isn't explicitly set, modify the output to be fully
     // backward compatible to code before Views 7.x-3.0-rc2.
     // @TODO Remove this as soon as possible e.g. October 2020
     if ($group_rendered === NULL) {
-      $old_style_sets = array();
+      $old_style_sets = [];
       foreach ($sets as $group) {
         $old_style_sets[$group['group']] = $group['rows'];
       }
       $sets = $old_style_sets;
     }
 
-    // Apply the offset and limit.
-    array_walk($sets, [$this, 'views_complex_grouping_limit_recursive']);
-
+    array_walk($sets, [$this, "views_complex_grouping_limit_recursive"]);
     return $sets;
   }
 
-
-  function renderGroupingSets($sets, $level = 0) {
+  public function renderGroupingSets($sets) {
     $output = [];
     $branch = 0;
-    $theme_functions = $this->view->buildThemeFunctions($this->groupingTheme);
-
+//    $theme_functions = $this->view->buildThemeFunctions('views_complex_grouping_level');
     foreach ($sets as $set) {
       $branch ++;
+      $level = isset($set['level']) ? $set['level'] : 0;
+
       $row = reset($set['rows']);
       // Render as a grouping set.
-
       if (is_array($row) && isset($row['group'])) {
         $single_output = [
-            'theme' => $this->view->buildThemeFunctions('views_complex_grouping_level'),
-            'view' => $this->view,
-            'grouping' => $this->options['grouping'][$level],
-            'grouping_level' => $level+1,
-            'grouping_branch' => $branch,
-            'rows' => $set['rows'],
-            'fields' => $set['fields'],
-            'title' => $set['group']
+            '#theme' => 'views_complex_grouping_level',
+            '#view' => $this->view,
+            '#grouping' => $this->options['grouping'][$level],
+            '#rows' => $set['rows'],
+            '#fields' => $set['fields'],
+            '#grouping_level' => $level+1,
+            '#grouping_branch' => $branch,
+            '#title' => $set['group']
         ];
       }
       // Render as a record set.
@@ -223,22 +208,29 @@ class ViewsComplexGrouping extends StylePluginBase
             $set['rows'][$index] = $this->view->rowPlugin->render($row);
           }
         }
-        $single_output = ['theme' => $theme_functions,
-            'view' => $this->view,
-            'grouping' => $this->options['grouping'][$level],
-            'grouping_level' => $level+1,
-            'grouping_branch' => $branch,
-            'rows' => $set['rows'],
-            'fields' => $set['fields'],
-            'title' => $set['group']
+        $single_output = [
+//            '#theme' => $this->view->buildThemeFunctions('views_complex_grouping_leave'),
+            '#theme' => 'views_complex_grouping_leave',
+            '#test_var' => $this->t('Test Value'),
+            '#options' => $this->options,
+            '#view' => $this->view,
+            '#grouping' => $this->options['grouping'][$level],
+            '#rows' => $set['rows'],
+            '#fields' => $set['fields'],
+            '#grouping_level' => $level+1,
+            '#grouping_branch' => $branch,
+            '#title' => $set['group']
         ];
+
       }
 
       $output[] = $single_output;
     }
     unset($this->view->row_index);
+//    $rendered = \Drupal::service('renderer')->render($output);
     return $output;
   }
+
 
   /**
    * Recursively limits the number of rows in nested groups.
@@ -258,11 +250,12 @@ class ViewsComplexGrouping extends StylePluginBase
    *   An array with a "rows" property that is recursively grouped by the
    *   grouping fields.
    */
-  function views_complex_grouping_limit_recursive(&$group_data, $key = NULL, $level = 1) {
+  public function views_complex_grouping_limit_recursive(&$group_data, $key = NULL, $level = 1) {
     $settings = $this->views_complex_grouping_settings($level - 1);
 
     $settings['grouping-limit'] = ($settings['grouping-limit'] != 0) ? $settings['grouping-limit'] : NULL;
     $settings['grouping-offset'] = (isset($settings['grouping-offset'])) ? $settings['grouping-offset'] : 0;
+
     // Slice up the rows according to the offset and limit.
     $group_data['rows'] = array_slice($group_data['rows'], $settings['grouping-offset'], $settings['grouping-limit'], TRUE);
 
